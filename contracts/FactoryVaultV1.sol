@@ -41,11 +41,19 @@ contract FactoryVaultV1Tvl {
             address colToken = IVault(allVaults[i]).collateralToken();
             address oracleAddress = IVault(allVaults[i]).getOracleAddress();
             uint256 colPrice = IOracle(oracleAddress).getPrice(colToken);
-            uint256 totalcol = IERC20(colToken).balanceOf(allVaults[i]);
-            tvl = tvl.add(totalcol.mul(colPrice).mul(TLVMUL).div(10**36));
+            uint256 decimal = 1e18;
+            uint256 totalcol = 0;
+            if(colToken==address(0)) {
+                totalcol = allVaults[i].balance;
+            } else {
+                decimal = getPriceTokenDecimal(colToken);
+                totalcol = IERC20(colToken).balanceOf(allVaults[i]);                
+            }
+            uint256 priceDecimal = uint256(10**36).div(decimal);
+            tvl = tvl.add(totalcol.mul(colPrice).mul(TLVMUL).div(decimal).div(priceDecimal));
         }
-
-        return tvl;
+		
+		return tvl;
     }
 
 }
